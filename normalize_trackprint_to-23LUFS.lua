@@ -18,16 +18,6 @@ local MAX_DELTA = 16
 local TOLERANCE = 0.5
 
 
-local function begin_edit()
-  reaper.Undo_BeginBlock()
-  reaper.PreventUIRefresh(1)
-end
-
-local function end_edit(desc)
-  reaper.PreventUIRefresh(-1)
-  reaper.Undo_EndBlock(desc, -1)
-end
-
 local function volume_normalizer()
 
 
@@ -89,18 +79,37 @@ local function volume_normalizer()
     end
 
     return true, "Success"
-
-
-
-
 end
 
 
+local function run_with_undo(desc, func)
+    reaper.ClearConsole()
+    local began = false
+    local ok, err
 
-reaper.ClearConsole()
-begin_edit()
+    ok, err = xpcall(function ()
+        reaper.Undo_BeginBlock()
+        reaper.PreventUIRefresh(1)
+        began = true
+        func()
+    end, debug.traceback)
 
-local ok, msg = volume_normalizer()
-if not ok then reaper.ShowMessageBox(msg, "Error", 0) end
+    if began then
+        reaper.PreventUIRefresh(-1)
+        reaper.Undo_EndBlock(desc, -1)
+    end
 
-end_edit("Normalize Track Print in Time selection")
+    if not ok and err ~= nil then
+        reaper.ShowMessageBox(err, "Script error", 0)
+    end
+
+    return ok, err
+end
+
+
+run_with_undo("Normalize Track Print to -23 LUFS", function ()
+    local ok, msg = volume_normalizer()
+    if not ok then
+        error(msg)
+    end
+end)
