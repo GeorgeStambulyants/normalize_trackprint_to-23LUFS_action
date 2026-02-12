@@ -51,12 +51,8 @@ local function volume_normalizer()
 
     local volume_adjuster_fx = FX.new(track.track, 0)
     local param_index = FX.get_paramidx_by_name(volume_adjuster_fx, "Adjustment (dB)")
-    local param_value_status, string_value = reaper.TrackFX_GetFormattedParamValue(track.track, volume_adjuster_fx.addrs, param_index)
+    local volume_adjuster_current_value, min, max = reaper.TrackFX_GetParam(track.track, volume_adjuster_fx.addrs, param_index)
 
-    if not param_value_status then return false, "Couldn't read volume value" end
-
-    local volume_adjuster_current_value = tonumber(string_value)
-    if volume_adjuster_current_value == nil then return false, "Couldn't read volume value" end
 
     local stats, stats_status = get_cur_track_stats()
     if stats == nil then return false, stats_status end
@@ -80,7 +76,7 @@ local function volume_normalizer()
         return false, after_stats_status
     end
 
-    if math.abs(after_stats.lufsi - TARGET_LUFS) < TOLERANCE then
+    if math.abs(after_stats.lufsi - TARGET_LUFS) > TOLERANCE then
         local set_old_value_status = reaper.TrackFX_SetParam(track.track, volume_adjuster_fx.addrs, param_index, volume_adjuster_current_value)
         local msg = "Adjustment failed"
         if not set_old_value_status then 
