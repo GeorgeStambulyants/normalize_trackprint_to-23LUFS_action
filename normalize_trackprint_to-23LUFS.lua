@@ -20,6 +20,12 @@ local TOLERANCE = 0.5
 
 local function volume_normalizer()
 
+    local ts_start, ts_end = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+    if ts_start >= ts_end then
+        return false, "No time selection. Create a time selection first"
+    end
+
+
 
     local track = Track.new(0, TRACK_NAME)
     if track == nil then return false, "Track not found" end
@@ -28,7 +34,7 @@ local function volume_normalizer()
     reaper.SetOnlyTrackSelected(track.track)
 
     local function get_cur_track_stats()
-        local cur_stats = RenderingUtil.parse_render_stats(RenderingUtil.measure_and_read_render_stats(0, 0))
+        local cur_stats = RenderingUtil.parse_render_stats(RenderingUtil.measure_and_read_render_stats(0, 1))
         if cur_stats == nil or #cur_stats == 0 then return nil, "error reading stats" end
         local cur_track_stats = RenderingUtil.get_record_by_filename(track, cur_stats, TRACK_NAME)
 
