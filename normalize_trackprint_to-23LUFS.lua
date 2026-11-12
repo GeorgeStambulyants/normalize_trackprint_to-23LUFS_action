@@ -46,7 +46,7 @@ local function volume_normalizer()
 
 
     local volume_adjuster_fx = FX.new(track.track, 0)
-    local param_index = FX.get_paramidx_by_name(volume_adjuster_fx, "Adjustment (dB)")
+    local param_index = FX.get_paramidx_by_name(volume_adjuster_fx, "Volume (dB)")
     local volume_adjuster_current_value, min, max = reaper.TrackFX_GetParam(track.track, volume_adjuster_fx.addrs, param_index)
 
 
